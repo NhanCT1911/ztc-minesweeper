@@ -44,10 +44,6 @@ rewardZTC = max(0.001, 0.5 / (1 + minutesPlayed)) * difficultyMultiplier
 ```
 - Reward is displayed in the UI only; **no blockchain transaction**.
 
-## 🧾 UI
-- Two columns: left — the board; right — wallet, chain id, time, and simulated reward.
-- Dark theme.
-
 ## 🚀 Setup & run
 ```bash
 npm install
