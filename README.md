@@ -1,6 +1,8 @@
 # ZTC Minesweeper
 
-A Minesweeper game built with **React + TypeScript + Vite** and **TailwindCSS**. Connect **MetaMask** to **ZenChain Testnet (ChainID 8408)** to display wallet & chain info. **No private keys requested** and **no on-chain transactions** — rewards are simulated off-chain.
+A Minesweeper game built with **React + TypeScript + Vite** and **TailwindCSS**.  
+The app connects with **MetaMask** on **ZenChain Testnet (ChainID 8408)** to show wallet and chain info.  
+⚠️ No private keys are requested and no real on-chain transactions are made — rewards are simulated.
 
 ## ⚙️ Tech stack
 - React + TypeScript + Vite
@@ -9,8 +11,8 @@ A Minesweeper game built with **React + TypeScript + Vite** and **TailwindCSS**.
 - Dark theme
 
 ## 🔗 ZenChain Testnet
-When the user clicks **Connect Wallet**, the app will:
-- Check if the current chain is `0x20D8` (8408). If **not**, it calls `wallet_addEthereumChain` to prompt MetaMask to add/switch:
+When connecting a wallet, the app ensures the chain is `0x20D8` (8408).  
+If not, it prompts MetaMask to add/switch:
 ```json
 {
   "chainId": "0x20D8",
