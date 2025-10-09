@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import Cell from './Cell'
 import { BoardState, createEmptyBoard, revealCell, toggleFlag } from '../utils/minesweeper'
 import { DifficultyConfig, DifficultyKey } from '../types'
+import { BrowserProvider } from 'ethers'
+import { claimOnChain } from '../chain/rewarder'   
 
 const DIFFICULTIES: Record<DifficultyKey, DifficultyConfig> = {
   easy:   { rows: 9,  cols: 9,  mines: 10, multiplier: 1 },
@@ -36,10 +38,11 @@ function calcReward(minutes:number, diff: DifficultyKey){
 }
 
 export default function Board({
-  onResult, canPlay
+  onResult, canPlay, provider
 }:{
   onResult:(status:'won'|'lost'|'idle'|'playing', seconds:number, difficulty:DifficultyKey)=>void,
-  canPlay:boolean
+  canPlay:boolean,
+  provider: BrowserProvider | null
 }){
 
   const [difficulty, setDifficulty] = useState<DifficultyKey>('easy')
@@ -52,8 +55,8 @@ export default function Board({
   const timerRef = useRef<number | null>(null)
 
   // ==== Auto-fit (scale) ====
-  const wrapRef = useRef<HTMLDivElement | null>(null)   
-  const cardRef = useRef<HTMLDivElement | null>(null)   
+  const wrapRef = useRef<HTMLDivElement | null>(null)
+  const cardRef = useRef<HTMLDivElement | null>(null)
   const [scale, setScale] = useState(1)
 
   const recomputeScale = () => {
@@ -61,8 +64,8 @@ export default function Board({
     const card = cardRef.current
     if(!wrap || !card) return
     card.style.transform = 'scale(1)'
-    const available = Math.max(0, wrap.clientWidth - 4)   
-    const needed = card.scrollWidth  
+    const available = Math.max(0, wrap.clientWidth - 4)
+    const needed = card.scrollWidth
     const s = needed > available ? (available / needed) : 1
     card.style.transform = `scale(${s})`
     setScale(s)
@@ -73,7 +76,6 @@ export default function Board({
     const onResize = () => recomputeScale()
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [board.rows, board.cols, difficulty])
 
   const reset = (dkey: DifficultyKey | null = null) => {
@@ -128,7 +130,7 @@ export default function Board({
       {/* Controls */}
       <div className="flex items-center gap-2">
         <select
-          className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700 px-3 py-2 rounded-md text-white"
+          className="bg-zinc-900/80 border border-zinc-700 px-3 py-2 rounded-md text-white"
           value={difficulty}
           onChange={(e)=> handleDifficulty(e.target.value as DifficultyKey)}
           disabled={!canPlay}
@@ -140,7 +142,7 @@ export default function Board({
 
         <button
           onClick={()=>reset()}
-          className="px-3 py-2 rounded-md bg-zinc-900/80 backdrop-blur-sm hover:bg-zinc-800 border border-zinc-700 disabled:opacity-50 text-white"
+          className="px-3 py-2 rounded-md bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700 disabled:opacity-50 text-white"
           disabled={!canPlay}
         >
           Start / Reset
@@ -149,19 +151,20 @@ export default function Board({
         <div className="ml-auto flex items-center gap-3 text-sm text-white">
           <div>⏱ {formatTime(seconds)}</div>
           <div>💣 Left: {remainingMines}</div>
-          <div className="px-2 py-1 rounded bg-zinc-900/80 backdrop-blur-sm border border-zinc-700">
+          <div className="px-2 py-1 rounded bg-zinc-900/80 border border-zinc-700">
             {board.status.toUpperCase()}
           </div>
         </div>
       </div>
+
       <div ref={wrapRef} className="w-full overflow-hidden">
         <div
           ref={cardRef}
-          className="inline-block bg-zinc-900/80 backdrop-blur-sm p-2 rounded-lg border border-zinc-700 shadow-lg origin-top-left"
+          className="inline-block bg-zinc-900/80 p-2 rounded-lg border border-zinc-700 shadow-lg origin-top-left"
           style={{ transform: `scale(${scale})`, lineHeight: 0 }}
         >
           {!canPlay && (
-            <div className="absolute inset-0 z-10 bg-zinc-900/85 backdrop-blur-md flex items-center justify-center rounded-lg">
+            <div className="absolute inset-0 z-10 bg-zinc-900/85 flex items-center justify-center rounded-lg">
               <div className="text-center text-white">
                 <div className="text-xl font-semibold">🔐 Please Connect Wallet to play</div>
                 <div className="text-sm text-zinc-300 mt-1">Use the “Connect Wallet” button at the top.</div>
@@ -193,6 +196,25 @@ export default function Board({
                 <div className="mt-2 text-sm text-zinc-300">Time: {formatTime(seconds)}</div>
                 <div className="mt-1 text-sm text-emerald-400 font-semibold">
                   Simulated ZTC earned: {calcReward(Math.floor(seconds/60), difficulty).toFixed(6)}
+                </div>
+                {/* ✅ Nút Claim ZTC on-chain */}
+                <div className="mt-4">
+                  <button
+                    onClick={async () => {
+                      if (!provider) return alert("Connect wallet first")
+                      try {
+                        const receipt = await claimOnChain(provider, difficulty, seconds)
+                        const hash = receipt?.transactionHash
+                        alert(`Claim success! Tx: ${hash}`)
+                        window.open(`https://zentrace.io/tx/${hash}`, "_blank")
+                      } catch (err:any) {
+                        alert(err?.message || "Claim failed")
+                      }
+                    }}
+                    className="px-3 py-2 rounded-md bg-indigo-600 hover:bg-indigo-500"
+                  >
+                    Claim ZTC (on-chain)
+                  </button>
                 </div>
               </>
             ) : (

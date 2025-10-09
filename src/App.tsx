@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react'
 import Board from './components/Board'
 import RightPanel from './components/RightPanel'
@@ -12,7 +11,9 @@ function calcReward(minutes:number, diff: DifficultyKey){
 }
 
 export default function App(){
-  const { address, chainId, connect, disconnect, connecting, error } = useWallet()
+  // ✅ Lấy thêm provider từ useWallet
+  const { address, chainId, connect, disconnect, connecting, error, provider } = useWallet()
+
   const [earnedReward, setEarnedReward] = useState(0)
   const [lastResult, setLastResult] = useState<'won'|'lost'|'idle'|'playing'>('idle')
   const [seconds, setSeconds] = useState(0)
@@ -40,50 +41,55 @@ export default function App(){
           </div>
           <div className="ml-auto flex items-center gap-2">
             {!address ? (
-              <button onClick={connect} disabled={connecting}
-                className="px-3 py-2 rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50">
+              <button
+                onClick={connect}
+                disabled={connecting}
+                className="px-3 py-2 rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50"
+              >
                 {connecting? 'Connecting...' : 'Connect Wallet'}
               </button>
             ) : (
               <>
                 <div className="text-sm text-zinc-300">Chain: {chainId ?? '—'}</div>
-                <button onClick={disconnect} className="px-3 py-2 rounded-md bg-zinc-800 hover:bg-zinc-700">Disconnect</button>
+                <button
+                  onClick={disconnect}
+                  className="px-3 py-2 rounded-md bg-zinc-800 hover:bg-zinc-700"
+                >
+                  Disconnect
+                </button>
               </>
             )}
           </div>
         </div>
       </header>
 
-		<main className="mx-auto max-w-7xl px-6 py-6 grid gap-6 items-start"
-			  style={{ gridTemplateColumns: '1fr 320px' }}>
-		  <section className="overflow-auto">
-			<div className="w-fit mx-auto">
-			  <Board onResult={onResult} canPlay={!!address} />
-			</div>
-		  </section>
-		  <aside className="space-y-3">
-			<RightPanel
-			  address={address}
-			  chainId={chainId}
-			  seconds={seconds}
-			  lastResult={lastResult}
-			  difficulty={difficulty}
-			  earnedReward={earnedReward}
-			/>
-			{error && (
-			  <div className="mt-3 p-3 rounded-md bg-red-900/40 border border-red-700 text-sm">
-				{error}
-			  </div>
-			)}
-		  </aside>
-		</main>
+      <main
+        className="mx-auto max-w-7xl px-6 py-6 grid gap-6 items-start"
+        style={{ gridTemplateColumns: '1fr 320px' }}
+      >
+        <section className="overflow-auto">
+          <div className="w-fit mx-auto">
+            {/* ✅ Truyền provider xuống Board để Claim on-chain */}
+            <Board onResult={onResult} canPlay={!!address} provider={provider} />
+          </div>
+        </section>
 
-
-	<footer className="mx-auto max-w-7xl px-6 py-6 text-xs text-zinc-200">
-	  ZenChain Testnet — ChainID 8408 (0x20D8). No on-chain transactions; rewards are simulated off-chain.
-	</footer>
-
-
+        <aside className="space-y-3">
+          <RightPanel
+            address={address}
+            chainId={chainId}
+            seconds={seconds}
+            lastResult={lastResult}
+            difficulty={difficulty}
+            earnedReward={earnedReward}
+          />
+          {error && (
+            <div className="mt-3 p-3 rounded-md bg-red-900/40 border border-red-700 text-sm">
+              {error}
+            </div>
+          )}
+        </aside>
+      </main>
     </div>
   )
 }
