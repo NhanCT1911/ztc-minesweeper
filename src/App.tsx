@@ -11,7 +11,6 @@ function calcReward(minutes:number, diff: DifficultyKey){
 }
 
 export default function App(){
-  // ✅ Lấy thêm provider từ useWallet
   const { address, chainId, connect, disconnect, connecting, error, provider } = useWallet()
 
   const [earnedReward, setEarnedReward] = useState(0)
@@ -69,7 +68,6 @@ export default function App(){
       >
         <section className="overflow-auto">
           <div className="w-fit mx-auto">
-            {/* ✅ Truyền provider xuống Board để Claim on-chain */}
             <Board onResult={onResult} canPlay={!!address} provider={provider} />
           </div>
         </section>
