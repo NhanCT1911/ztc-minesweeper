@@ -49,6 +49,11 @@ rewardZTC = max(0.001, 0.5 / (1 + minutesPlayed)) * difficultyMultiplier
 npm install
 npm run dev
 ```
+## ⚠️ Note
+
+`.env` file contains only **public testnet info**, no private keys.  
+You can use it as-is to run the demo.
+
 The app runs at the Vite URL (usually `http://localhost:5173`).
 
 ## 📁 Structure
